@@ -31,6 +31,16 @@
     <div class="modal-contenido">
       <h2>Código leído</h2>
       <p id="skuLeido" class="sku-leido"></p>
+
+      <p id="buscandoProducto" class="hint oculto">Buscando producto…</p>
+
+      <p id="productoConocido" class="producto-conocido oculto"></p>
+
+      <div id="productoNuevo" class="oculto">
+        <label for="inputProductoNuevo">Nombre del producto (SKU nuevo)</label>
+        <input type="text" id="inputProductoNuevo" placeholder="Opcional, puedes rellenarlo luego" />
+      </div>
+
       <label for="cantidad">Cantidad</label>
       <input type="number" id="cantidad" value="1" min="1" inputmode="numeric" />
       <div class="botones-movimiento">
