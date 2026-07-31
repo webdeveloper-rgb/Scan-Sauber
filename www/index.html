@@ -14,16 +14,37 @@
   </header>
 
   <main id="pantallaPrincipal">
-    <p class="hint">Pulsa el botón y apunta la cámara a un código de barras o QR.</p>
+    <p class="hint">Pulsa un botón y apunta la cámara a un código de barras o QR.</p>
     <button id="btnEscanear" class="boton-grande">📷 Escanear producto</button>
+    <button id="btnEscaneoContinuo" class="boton-grande boton-outline">🔁 Escaneo continuo</button>
+    <p class="hint hint-pequeno">El modo continuo registra cada código al vuelo (misma operación y cantidad para todos) sin pedir el nombre de productos nuevos — complétalos luego en la hoja Catalogo.</p>
     <div id="ultimoResultado" class="ultimo-resultado"></div>
   </main>
 
-  <!-- Overlay de escaneo: se hace transparente para que se vea la cámara nativa por detrás -->
+  <!-- Overlay de escaneo único: se hace transparente para que se vea la cámara nativa por detrás -->
   <div id="pantallaEscaner" class="pantalla-escaner oculto">
     <div class="marco-escaner"></div>
     <p class="instruccion-escaner">Apunta al código…</p>
     <button id="btnCancelarEscaneo" class="boton-secundario">Cancelar</button>
+  </div>
+
+  <!-- Overlay de escaneo continuo: la cámara no se para entre código y código -->
+  <div id="pantallaEscanerContinuo" class="pantalla-escaner oculto">
+    <div class="marco-escaner"></div>
+    <div class="panel-continuo">
+      <div class="fila-chips">
+        <button id="btnContOperacionSalida" class="chip">− Salida</button>
+        <button id="btnContOperacionEntrada" class="chip chip-activo">+ Entrada</button>
+      </div>
+      <div class="fila-cantidad-continua">
+        <button id="btnContCantidadMenos" class="chip-pequeno">−</button>
+        <span id="contCantidadValor">1</span>
+        <button id="btnContCantidadMas" class="chip-pequeno">+</button>
+        <span class="hint-inline">por código</span>
+      </div>
+      <p id="contContador" class="hint">0 registrados en esta sesión</p>
+      <button id="btnTerminarContinuo" class="boton-secundario">Terminar</button>
+    </div>
   </div>
 
   <!-- Formulario tras leer un código -->

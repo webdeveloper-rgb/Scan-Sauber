@@ -72,6 +72,18 @@ main {
   margin-top: 20px;
 }
 
+.boton-outline {
+  background: transparent;
+  border: 2px solid #2e75b6;
+  margin-top: 12px;
+}
+
+.hint-pequeno {
+  font-size: 0.8em;
+  max-width: 340px;
+  margin: 10px auto 0;
+}
+
 .boton-texto {
   background: none;
   border: none;
@@ -120,6 +132,66 @@ body.barcode-scanner-active main {
   padding: 6px 14px;
   border-radius: 8px;
   margin-top: 16px;
+}
+
+.panel-continuo {
+  margin-top: 20px;
+  background: rgba(0,0,0,0.6);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 90%;
+  max-width: 320px;
+}
+
+.fila-chips {
+  display: flex;
+  gap: 10px;
+}
+
+.chip {
+  padding: 10px 16px;
+  border-radius: 20px;
+  border: 2px solid #555;
+  background: transparent;
+  color: #fff;
+  font-size: 1em;
+}
+
+.chip-activo {
+  border-color: #fff;
+  background: #2e75b6;
+}
+
+.fila-cantidad-continua {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+}
+
+.chip-pequeno {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: #333;
+  color: #fff;
+  font-size: 1.3em;
+}
+
+#contCantidadValor {
+  font-size: 1.2em;
+  min-width: 24px;
+  text-align: center;
+}
+
+.hint-inline {
+  color: #9aa0aa;
+  font-size: 0.85em;
 }
 
 .oculto { display: none !important; }
