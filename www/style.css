@@ -1,0 +1,199 @@
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: -apple-system, Roboto, Arial, sans-serif;
+  background: #0f1115;
+  color: #fff;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: #1a1d24;
+}
+
+header h1 {
+  font-size: 1.2em;
+  margin: 0;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  font-size: 1.4em;
+  color: #fff;
+  cursor: pointer;
+}
+
+main {
+  padding: 24px 16px;
+  text-align: center;
+}
+
+.hint {
+  color: #9aa0aa;
+  font-size: 0.95em;
+}
+
+.boton-grande {
+  width: 100%;
+  max-width: 340px;
+  padding: 20px;
+  font-size: 1.2em;
+  border: none;
+  border-radius: 12px;
+  background: #2e75b6;
+  color: #fff;
+  margin-top: 24px;
+  cursor: pointer;
+}
+
+.boton-secundario {
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: none;
+  background: #333;
+  color: #fff;
+  margin-top: 20px;
+}
+
+.boton-texto {
+  background: none;
+  border: none;
+  color: #9aa0aa;
+  margin-top: 12px;
+  padding: 8px;
+}
+
+.ultimo-resultado {
+  margin-top: 20px;
+  font-size: 0.9em;
+  color: #9aa0aa;
+  min-height: 1.4em;
+}
+
+/* Pantalla de escaneo: se vuelve transparente para dejar ver la cámara nativa detrás del WebView */
+.pantalla-escaner {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  z-index: 50;
+}
+
+body.barcode-scanner-active {
+  background: transparent !important;
+}
+body.barcode-scanner-active header,
+body.barcode-scanner-active main {
+  visibility: hidden;
+}
+
+.marco-escaner {
+  width: 240px;
+  height: 240px;
+  border: 3px solid #fff;
+  border-radius: 16px;
+}
+
+.instruccion-escaner {
+  color: #fff;
+  background: rgba(0,0,0,0.5);
+  padding: 6px 14px;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+.oculto { display: none !important; }
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+  padding: 16px;
+}
+
+.modal-contenido {
+  background: #1a1d24;
+  border-radius: 14px;
+  padding: 24px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.modal-contenido h2 {
+  margin-top: 0;
+}
+
+.sku-leido {
+  font-size: 1.3em;
+  font-weight: bold;
+  word-break: break-all;
+  background: #0f1115;
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+label {
+  display: block;
+  margin-top: 14px;
+  margin-bottom: 6px;
+  color: #9aa0aa;
+  font-size: 0.9em;
+}
+
+input[type=text], input[type=number] {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #0f1115;
+  color: #fff;
+  font-size: 1.1em;
+}
+
+.botones-movimiento {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.boton-entrada, .boton-salida {
+  flex: 1;
+  padding: 16px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.1em;
+  color: #fff;
+}
+
+.boton-entrada { background: #2e7d32; }
+.boton-salida { background: #c62828; }
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 30px;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 30px;
+  font-size: 0.95em;
+  z-index: 100;
+  max-width: 90%;
+  text-align: center;
+}

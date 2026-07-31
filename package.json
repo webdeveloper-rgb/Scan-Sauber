@@ -1,0 +1,18 @@
+{
+  "name": "control-stock-scanner",
+  "version": "1.0.0",
+  "private": true,
+  "description": "App Android nativa para escanear stock (entradas/salidas) y registrarlo en el backend de Apps Script.",
+  "scripts": {
+    "sync": "cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/core": "latest",
+    "@capacitor/android": "latest",
+    "@capacitor/preferences": "latest",
+    "@capacitor-mlkit/barcode-scanning": "latest"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "latest"
+  }
+}

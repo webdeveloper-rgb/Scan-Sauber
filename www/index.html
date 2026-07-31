@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Control de Stock</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header>
+    <h1>Control de Stock</h1>
+    <button id="btnAjustes" class="icon-btn" aria-label="Ajustes">⚙️</button>
+  </header>
+
+  <main id="pantallaPrincipal">
+    <p class="hint">Pulsa el botón y apunta la cámara a un código de barras o QR.</p>
+    <button id="btnEscanear" class="boton-grande">📷 Escanear producto</button>
+    <div id="ultimoResultado" class="ultimo-resultado"></div>
+  </main>
+
+  <!-- Overlay de escaneo: se hace transparente para que se vea la cámara nativa por detrás -->
+  <div id="pantallaEscaner" class="pantalla-escaner oculto">
+    <div class="marco-escaner"></div>
+    <p class="instruccion-escaner">Apunta al código…</p>
+    <button id="btnCancelarEscaneo" class="boton-secundario">Cancelar</button>
+  </div>
+
+  <!-- Formulario tras leer un código -->
+  <div id="pantallaConfirmar" class="modal oculto">
+    <div class="modal-contenido">
+      <h2>Código leído</h2>
+      <p id="skuLeido" class="sku-leido"></p>
+      <label for="cantidad">Cantidad</label>
+      <input type="number" id="cantidad" value="1" min="1" inputmode="numeric" />
+      <div class="botones-movimiento">
+        <button id="btnSalida" class="boton-salida">− Salida</button>
+        <button id="btnEntrada" class="boton-entrada">+ Entrada</button>
+      </div>
+      <button id="btnCancelarConfirmar" class="boton-texto">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Ajustes: URL y token del backend (Apps Script) -->
+  <div id="pantallaAjustes" class="modal oculto">
+    <div class="modal-contenido">
+      <h2>Ajustes del backend</h2>
+      <p class="hint">Pega aquí la URL /exec y el token que configuraste al desplegar el backend de Google Apps Script.</p>
+      <label for="inputApiUrl">API_URL</label>
+      <input type="text" id="inputApiUrl" placeholder="https://script.google.com/macros/s/.../exec" />
+      <label for="inputApiToken">API_TOKEN</label>
+      <input type="text" id="inputApiToken" placeholder="tu-token-secreto" />
+      <button id="btnGuardarAjustes" class="boton-grande">Guardar</button>
+      <button id="btnCerrarAjustes" class="boton-texto">Cerrar</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast oculto"></div>
+
+  <!-- Capacitor inyecta su puente (window.Capacitor) automáticamente; no hace falta incluirlo a mano -->
+  <script src="app.js"></script>
+</body>
+</html>

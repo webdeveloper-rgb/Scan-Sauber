@@ -1,0 +1,8 @@
+{
+  "appId": "com.hirolina.controlstock",
+  "appName": "Control de Stock",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}
