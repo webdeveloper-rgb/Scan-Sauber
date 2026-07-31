@@ -17,8 +17,13 @@
   var elSkuLeido = document.getElementById('skuLeido');
   var elCantidad = document.getElementById('cantidad');
   var elUltimoResultado = document.getElementById('ultimoResultado');
+  var elBuscandoProducto = document.getElementById('buscandoProducto');
+  var elProductoConocido = document.getElementById('productoConocido');
+  var elProductoNuevo = document.getElementById('productoNuevo');
+  var elInputProductoNuevo = document.getElementById('inputProductoNuevo');
 
   var skuActual = null;
+  var productoEncontrado = null; // nombre si el SKU ya existía en el catálogo; null si es nuevo
   var config = { apiUrl: '', apiToken: '' };
 
   function mostrarToast(msg, duracionMs) {
@@ -158,9 +163,60 @@
   function onCodigoLeido(valor) {
     pararCamara();
     skuActual = valor;
+    productoEncontrado = null;
     elSkuLeido.textContent = valor;
     elCantidad.value = 1;
+
+    // Estado inicial mientras se consulta el nombre: oculta ambas variantes
+    // (encontrado / nuevo) y muestra "Buscando producto…".
+    elProductoConocido.classList.add('oculto');
+    elProductoNuevo.classList.add('oculto');
+    elInputProductoNuevo.value = '';
+    elBuscandoProducto.classList.remove('oculto');
     elConfirmar.classList.remove('oculto');
+
+    buscarNombreProducto(valor);
+  }
+
+  function buscarNombreProducto(sku) {
+    if (!config.apiUrl || !config.apiToken) {
+      mostrarEstadoProductoNuevo();
+      return;
+    }
+    var url = config.apiUrl + '?view=lookup&token=' + encodeURIComponent(config.apiToken) +
+      '&sku=' + encodeURIComponent(sku);
+
+    fetch(url)
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        // Si mientras tanto se canceló o se leyó otro código, ignoramos la respuesta.
+        if (skuActual !== sku) return;
+        if (res && res.found && res.producto) {
+          productoEncontrado = res.producto;
+          mostrarEstadoProductoConocido(res.producto);
+        } else {
+          mostrarEstadoProductoNuevo();
+        }
+      })
+      .catch(function () {
+        // Sin conexión o bloqueado por CORS: no impedimos seguir, simplemente
+        // lo tratamos como SKU nuevo y dejamos que el nombre se escriba a mano.
+        if (skuActual !== sku) return;
+        mostrarEstadoProductoNuevo();
+      });
+  }
+
+  function mostrarEstadoProductoConocido(nombre) {
+    elBuscandoProducto.classList.add('oculto');
+    elProductoNuevo.classList.add('oculto');
+    elProductoConocido.textContent = '✓ ' + nombre;
+    elProductoConocido.classList.remove('oculto');
+  }
+
+  function mostrarEstadoProductoNuevo() {
+    elBuscandoProducto.classList.add('oculto');
+    elProductoConocido.classList.add('oculto');
+    elProductoNuevo.classList.remove('oculto');
   }
 
   document.getElementById('btnEscanear').addEventListener('click', iniciarEscaneo);
@@ -168,6 +224,7 @@
   document.getElementById('btnCancelarConfirmar').addEventListener('click', function () {
     elConfirmar.classList.add('oculto');
     skuActual = null;
+    productoEncontrado = null;
   });
 
   // ---------- Registrar movimiento contra el backend (Apps Script) ----------
@@ -175,20 +232,24 @@
     if (!skuActual) return;
     var cantidad = parseInt(elCantidad.value, 10) || 1;
     var delta = signo * cantidad;
+    var sku = skuActual;
+    // Si ya existía, reenviamos su nombre tal cual (no lo borramos); si es
+    // nuevo, mandamos lo que se haya escrito (puede quedar vacío).
+    var nombreProducto = productoEncontrado || elInputProductoNuevo.value.trim();
 
     elConfirmar.classList.add('oculto');
-    mostrarToast('Enviando ' + skuActual + '…', 4000);
+    mostrarToast('Enviando ' + sku + '…', 4000);
 
     fetch(config.apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ sku: skuActual, delta: delta, token: config.apiToken })
+      body: JSON.stringify({ sku: sku, delta: delta, token: config.apiToken, producto: nombreProducto })
     })
       .then(function (r) { return r.json(); })
       .then(function (res) {
         if (res.ok) {
-          mostrarToast('Registrado: ' + res.sku + ' → cantidad ' + res.cantidadActual);
-          elUltimoResultado.textContent = 'Último: ' + res.sku + ' (' + (delta > 0 ? '+' : '') + delta + ') el ' + new Date().toLocaleTimeString();
+          mostrarToast('Registrado: ' + (res.producto || res.sku) + ' → cantidad ' + res.cantidadActual);
+          elUltimoResultado.textContent = 'Último: ' + (res.producto || res.sku) + ' (' + (delta > 0 ? '+' : '') + delta + ') el ' + new Date().toLocaleTimeString();
         } else {
           mostrarToast('El servidor respondió con error: ' + res.error);
         }
@@ -199,10 +260,11 @@
         // servidor aunque aquí no podamos leer la respuesta. Verifica la
         // pestaña "Movimientos" de la Google Sheet si tienes dudas.
         mostrarToast('Enviado, pero sin confirmación del servidor (posible CORS). Revisa la hoja Movimientos si tienes dudas.', 5000);
-        elUltimoResultado.textContent = 'Último envío (sin confirmar): ' + skuActual + ' (' + (delta > 0 ? '+' : '') + delta + ')';
+        elUltimoResultado.textContent = 'Último envío (sin confirmar): ' + sku + ' (' + (delta > 0 ? '+' : '') + delta + ')';
       })
       .finally(function () {
         skuActual = null;
+        productoEncontrado = null;
       });
   }
 
