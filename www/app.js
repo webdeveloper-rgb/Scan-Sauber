@@ -11,6 +11,7 @@
 
   var elPrincipal = document.getElementById('pantallaPrincipal');
   var elEscaner = document.getElementById('pantallaEscaner');
+  var elEscanerContinuo = document.getElementById('pantallaEscanerContinuo');
   var elConfirmar = document.getElementById('pantallaConfirmar');
   var elAjustes = document.getElementById('pantallaAjustes');
   var elToast = document.getElementById('toast');
@@ -21,10 +22,23 @@
   var elProductoConocido = document.getElementById('productoConocido');
   var elProductoNuevo = document.getElementById('productoNuevo');
   var elInputProductoNuevo = document.getElementById('inputProductoNuevo');
+  var elContCantidadValor = document.getElementById('contCantidadValor');
+  var elContContador = document.getElementById('contContador');
+  var elBtnContOperacionEntrada = document.getElementById('btnContOperacionEntrada');
+  var elBtnContOperacionSalida = document.getElementById('btnContOperacionSalida');
 
   var skuActual = null;
   var productoEncontrado = null; // nombre si el SKU ya existía en el catálogo; null si es nuevo
   var config = { apiUrl: '', apiToken: '' };
+
+  // ---- Estado del modo de escaneo continuo ----
+  var modoContinuo = false;
+  var operacionContinua = 1;   // 1 = entrada, -1 = salida
+  var cantidadContinua = 1;    // unidades que suma/resta cada código leído
+  var contadorContinuo = 0;    // cuántos códigos se han registrado en esta sesión
+  var ultimoSkuContinuo = null;
+  var ultimoTimestampContinuo = 0;
+  var DEBOUNCE_CONTINUO_MS = 2000; // ignora el mismo código si sigue en el encuadre
 
   function mostrarToast(msg, duracionMs) {
     elToast.textContent = msg;
@@ -68,6 +82,20 @@
 
   // ---------- Escaneo ----------
   function iniciarEscaneo() {
+    modoContinuo = false;
+    prepararYArrancar();
+  }
+
+  function iniciarEscaneoContinuo() {
+    modoContinuo = true;
+    contadorContinuo = 0;
+    ultimoSkuContinuo = null;
+    ultimoTimestampContinuo = 0;
+    actualizarPanelContinuo();
+    prepararYArrancar();
+  }
+
+  function prepararYArrancar() {
     if (!BarcodeScanner) {
       mostrarToast('El plugin de escaneo no está disponible en este build.');
       return;
@@ -136,11 +164,18 @@
 
   function arrancarCamara() {
     document.body.classList.add('barcode-scanner-active');
-    elEscaner.classList.remove('oculto');
+    if (modoContinuo) {
+      elEscanerContinuo.classList.remove('oculto');
+    } else {
+      elEscaner.classList.remove('oculto');
+    }
 
     BarcodeScanner.addListener('barcodesScanned', function (event) {
       var codigos = event && event.barcodes ? event.barcodes : [];
-      if (codigos.length > 0 && codigos[0].rawValue) {
+      if (codigos.length === 0 || !codigos[0].rawValue) return;
+      if (modoContinuo) {
+        onCodigoLeidoContinuo(codigos[0].rawValue);
+      } else {
         onCodigoLeido(codigos[0].rawValue);
       }
     });
@@ -151,9 +186,12 @@
     });
   }
 
+  // Para el modo único; en el modo continuo la cámara sigue activa entre
+  // código y código, así que esto solo se llama al pulsar "Terminar".
   function pararCamara() {
     document.body.classList.remove('barcode-scanner-active');
     elEscaner.classList.add('oculto');
+    elEscanerContinuo.classList.add('oculto');
     if (BarcodeScanner) {
       BarcodeScanner.removeAllListeners();
       BarcodeScanner.stopScan().catch(function () {});
@@ -220,11 +258,80 @@
   }
 
   document.getElementById('btnEscanear').addEventListener('click', iniciarEscaneo);
+  document.getElementById('btnEscaneoContinuo').addEventListener('click', iniciarEscaneoContinuo);
   document.getElementById('btnCancelarEscaneo').addEventListener('click', pararCamara);
   document.getElementById('btnCancelarConfirmar').addEventListener('click', function () {
     elConfirmar.classList.add('oculto');
     skuActual = null;
     productoEncontrado = null;
+  });
+
+  // ---------- Modo continuo: registra cada código al vuelo, sin parar la cámara ----------
+  function onCodigoLeidoContinuo(valor) {
+    var ahora = Date.now();
+    // Mismo código que el último y todavía dentro de la ventana de espera:
+    // seguramente sigue en el encuadre, lo ignoramos para no duplicar.
+    if (valor === ultimoSkuContinuo && (ahora - ultimoTimestampContinuo) < DEBOUNCE_CONTINUO_MS) {
+      return;
+    }
+    ultimoSkuContinuo = valor;
+    ultimoTimestampContinuo = ahora;
+
+    if (navigator.vibrate) navigator.vibrate(60);
+
+    var delta = operacionContinua * cantidadContinua;
+
+    fetch(config.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ sku: valor, delta: delta, token: config.apiToken })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (res.ok) {
+          contadorContinuo++;
+          actualizarPanelContinuo();
+          mostrarToast((delta > 0 ? '+' : '') + delta + ' ' + (res.producto || res.sku) + ' → ' + res.cantidadActual, 1600);
+        } else {
+          mostrarToast('Error con ' + valor + ': ' + res.error, 2500);
+        }
+      })
+      .catch(function () {
+        // Mismo aviso de CORS que en el modo único: probablemente sí se guardó.
+        contadorContinuo++;
+        actualizarPanelContinuo();
+        mostrarToast((delta > 0 ? '+' : '') + delta + ' ' + valor + ' (sin confirmar)', 1600);
+      });
+  }
+
+  function actualizarPanelContinuo() {
+    elContCantidadValor.textContent = cantidadContinua;
+    elContContador.textContent = contadorContinuo + ' registrado' + (contadorContinuo === 1 ? '' : 's') + ' en esta sesión';
+    elBtnContOperacionEntrada.classList.toggle('chip-activo', operacionContinua === 1);
+    elBtnContOperacionSalida.classList.toggle('chip-activo', operacionContinua === -1);
+  }
+
+  document.getElementById('btnContOperacionEntrada').addEventListener('click', function () {
+    operacionContinua = 1;
+    actualizarPanelContinuo();
+  });
+  document.getElementById('btnContOperacionSalida').addEventListener('click', function () {
+    operacionContinua = -1;
+    actualizarPanelContinuo();
+  });
+  document.getElementById('btnContCantidadMas').addEventListener('click', function () {
+    cantidadContinua++;
+    actualizarPanelContinuo();
+  });
+  document.getElementById('btnContCantidadMenos').addEventListener('click', function () {
+    cantidadContinua = Math.max(1, cantidadContinua - 1);
+    actualizarPanelContinuo();
+  });
+  document.getElementById('btnTerminarContinuo').addEventListener('click', function () {
+    var total = contadorContinuo;
+    pararCamara();
+    modoContinuo = false;
+    mostrarToast('Sesión continua terminada: ' + total + ' código' + (total === 1 ? '' : 's') + ' registrado' + (total === 1 ? '' : 's') + '.', 3500);
   });
 
   // ---------- Registrar movimiento contra el backend (Apps Script) ----------
