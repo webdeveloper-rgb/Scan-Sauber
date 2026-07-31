@@ -5,8 +5,18 @@ html, body {
   padding: 0;
   height: 100%;
   font-family: -apple-system, Roboto, Arial, sans-serif;
-  background: #0f1115;
   color: #fff;
+}
+
+/* html debe quedar transparente SIEMPRE: body (opaco) lo tapa por completo en uso
+   normal, pero si html también fuera opaco bloquearía la cámara nativa que
+   se renderiza detrás de la WebView en cuanto body se vuelva transparente. */
+html {
+  background: transparent;
+}
+
+body {
+  background: #0f1115;
 }
 
 header {
