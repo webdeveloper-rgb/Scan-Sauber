@@ -75,11 +75,11 @@
 
     BarcodeScanner.checkPermissions().then(function (res) {
       if (res.camera === 'granted' || res.camera === 'limited') {
-        arrancarCamara();
+        asegurarModuloYArrancar();
       } else {
         BarcodeScanner.requestPermissions().then(function (res2) {
           if (res2.camera === 'granted' || res2.camera === 'limited') {
-            arrancarCamara();
+            asegurarModuloYArrancar();
           } else {
             mostrarToast('Necesito permiso de cámara para escanear.');
           }
@@ -87,6 +87,45 @@
       }
     }).catch(function (err) {
       mostrarToast('Error comprobando permisos: ' + err);
+    });
+  }
+
+  // El escáner de ML Kit depende de un módulo de Google Play Services que no
+  // siempre viene instalado de fábrica. Si falta, hay que pedir su descarga
+  // ANTES de arrancar la cámara — si no, la pantalla se queda en negro sin
+  // ningún error visible.
+  function asegurarModuloYArrancar() {
+    if (typeof BarcodeScanner.isGoogleBarcodeScannerModuleAvailable !== 'function') {
+      // Versión del plugin sin esta comprobación: intentamos arrancar directamente.
+      arrancarCamara();
+      return;
+    }
+    BarcodeScanner.isGoogleBarcodeScannerModuleAvailable().then(function (res) {
+      if (res && res.available) {
+        arrancarCamara();
+        return;
+      }
+      mostrarToast('Descargando el módulo de escaneo de Google (solo la primera vez)…', 6000);
+      var listenerPromise = BarcodeScanner.addListener(
+        'googleBarcodeScannerModuleInstallProgress',
+        function (event) {
+          var progreso = event && typeof event.progress === 'number' ? event.progress : null;
+          var estado = event && event.state ? String(event.state) : '';
+          if (progreso !== null) {
+            mostrarToast('Descargando módulo de escaneo… ' + progreso + '%', 4000);
+          }
+          if (progreso >= 100 || /complet/i.test(estado)) {
+            listenerPromise.then(function (h) { h.remove(); });
+            arrancarCamara();
+          }
+        }
+      );
+      BarcodeScanner.installGoogleBarcodeScannerModule().catch(function (err) {
+        mostrarToast('No se pudo descargar el módulo de escaneo: ' + err);
+      });
+    }).catch(function (err) {
+      // Si la comprobación falla, probamos a arrancar igualmente.
+      arrancarCamara();
     });
   }
 
