@@ -165,6 +165,13 @@ label {
   font-size: 0.9em;
 }
 
+.producto-conocido {
+  text-align: center;
+  font-size: 1.1em;
+  margin-top: 8px;
+  color: #a5d6a7;
+}
+
 input[type=text], input[type=number] {
   width: 100%;
   padding: 12px;
